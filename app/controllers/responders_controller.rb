@@ -1,0 +1,48 @@
+class RespondersController < ApplicationController
+  before_action :find_responder, only: [:show, :update]
+
+  def index
+    @responders = Responder.all
+    return render json: { capacity: Capacity.display_capacity } if params[:show] == 'capacity'
+
+    render json: { responders: [] } if @responders.empty?
+  end
+
+  def create
+    @responder = Responder.new(create_responder_params)
+
+    if @responder.save
+      render :show, status: 201
+    else
+      @errors = @responder.errors.messages
+      render json: { message: @errors }, status: 422
+    end
+  end
+
+  def show
+    render json: {}, status: 404 unless @responder
+  end
+
+  def update
+    if @responder.update(update_responder_params)
+      render :show
+    else
+      @errors = @responder.errors.messages
+      render json: { message: @errors }
+    end
+  end
+
+  private
+
+    def create_responder_params
+      params.require(:responder).permit(:type, :name, :capacity)
+    end
+
+    def update_responder_params
+      params.require(:responder).permit(:on_duty)
+    end
+
+    def find_responder
+      @responder = Responder.find_by(name: params[:id])
+    end
+end
